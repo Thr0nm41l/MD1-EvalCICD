@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [ "main" ]
 
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
 jobs:
   test-html:
     #runs-on: ubuntu-latest
@@ -20,4 +25,22 @@ jobs:
        uses: Cyb3r-Jak3/html5validator-action@v7.2.0
        with:
          root: .
-
+     - name: Push sur la branche main
+       if: success()
+       run: |
+         # on récupèrele message du commit
+         COMMIT_MSG=$(git log -1 --pretty=%B)
+         echo "Message récupéré : $COMMIT_MSG"
+          
+         # Bascule sur la branche main
+         git fetch origin main:main
+         git checkout main
+         echo "Branche main checkout réussie."
+          
+         # Merge de la branche dev dans main
+         git merge origin/dev -m "Auto-merge from dev: $COMMIT_MSG [validated]" --allow-unrelated-histories
+         echo "Merge de dev dans main réussi."
+          
+         # Push sur la branche main
+         git push origin main 
+         echo "Branche main mise à jour avec succès après validation HTML."
